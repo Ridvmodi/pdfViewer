@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:http/http.dart' as http;
+import 'package:downloads_path_provider/downloads_path_provider.dart';
 
 void main() => runApp(MyApp());
 
@@ -76,7 +77,7 @@ class _MyAppState extends State<MyApp> {
                             context,
                             MaterialPageRoute(
                                 builder: (context) =>
-                                    PdfViewPage(path: filePath)));
+                                    PdfViewPage(path: filePath, fromUrl: true,)));
                       });
                     });
                   },
@@ -89,7 +90,7 @@ class _MyAppState extends State<MyApp> {
                             context,
                             MaterialPageRoute(
                                 builder: (context) =>
-                                    PdfViewPage(path: file.path)));
+                                    PdfViewPage(path: file.path, fromUrl: false,)));
                       });
                     },
                     child: Text("Find in Storage"),
@@ -105,8 +106,8 @@ class _MyAppState extends State<MyApp> {
 
 class PdfViewPage extends StatefulWidget {
   final String path;
-
-  const PdfViewPage({Key key, this.path}) : super(key: key);
+  final bool fromUrl;
+  const PdfViewPage({Key key, this.path, this.fromUrl}) : super(key: key);
   @override
   _PdfViewPageState createState() => _PdfViewPageState();
 }
@@ -114,10 +115,23 @@ class PdfViewPage extends StatefulWidget {
 class _PdfViewPageState extends State<PdfViewPage> {
   bool pdfReady = false;
   PDFViewController _pdfViewController;
-
+  Future<Directory> getDownloadsDirectory() {
+    Future<Directory> downloadsDirectory = DownloadsPathProvider.downloadsDirectory;
+    return downloadsDirectory;
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+       floatingActionButton: widget.fromUrl ? FloatingActionButton(
+          onPressed: () async {
+            var dir = await DownloadsPathProvider.downloadsDirectory;
+            print("\n\n\nThe dir is" + dir.path);
+          },
+          backgroundColor: Colors.black,
+          child: Icon(Icons.file_download,
+          color: Colors.white,),
+        ) : null,
         appBar: AppBar(
           title: Text("My Doccument"),
         ),
@@ -141,7 +155,7 @@ class _PdfViewPageState extends State<PdfViewPage> {
                 _pdfViewController = vc;
               },
             ),
-            !pdfReady ? Center(child: CircularProgressIndicator()) : Offstage()
+            !pdfReady ? Center(child: CircularProgressIndicator()) : Offstage(),
           ],
         ));
   }
