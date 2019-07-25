@@ -7,6 +7,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:http/http.dart' as http;
 import 'package:downloads_path_provider/downloads_path_provider.dart';
+import 'package:dio/dio.dart';
+import 'package:simple_permissions/simple_permissions.dart';
 
 void main() => runApp(MyApp());
 
@@ -72,12 +74,11 @@ class _MyAppState extends State<MyApp> {
                     getFileFromUrl(_editingController.text).then((file) {
                       setState(() {
                         filePath = file.path;
-                        print(filePath);
                         Navigator.push(
                             context,
                             MaterialPageRoute(
                                 builder: (context) =>
-                                    PdfViewPage(path: filePath, fromUrl: true,)));
+                                    PdfViewPage(path: filePath, fromUrl: true,url: _editingController.text)));
                       });
                     });
                   },
@@ -105,9 +106,9 @@ class _MyAppState extends State<MyApp> {
 }
 
 class PdfViewPage extends StatefulWidget {
-  final String path;
+  final String path, url;
   final bool fromUrl;
-  const PdfViewPage({Key key, this.path, this.fromUrl}) : super(key: key);
+  const PdfViewPage({Key key, this.path, this.fromUrl, this.url}) : super(key: key);
   @override
   _PdfViewPageState createState() => _PdfViewPageState();
 }
@@ -115,9 +116,15 @@ class PdfViewPage extends StatefulWidget {
 class _PdfViewPageState extends State<PdfViewPage> {
   bool pdfReady = false;
   PDFViewController _pdfViewController;
-  Future<Directory> getDownloadsDirectory() {
-    Future<Directory> downloadsDirectory = DownloadsPathProvider.downloadsDirectory;
-    return downloadsDirectory;
+  Future<void> downloadFile(String url) async{
+    Dio dio = Dio();
+    var dir = await DownloadsPathProvider.downloadsDirectory;
+    print("\n\n\nThe dir is" + dir.path);
+    PermissionStatus permissionResult = await SimplePermissions.requestPermission(Permission. WriteExternalStorage);
+    if (permissionResult == PermissionStatus.authorized){
+        await dio.download(url, "${dir.path}/pdf.pdf");
+    }
+    print("download fnc me agya bro");
   }
   @override
   Widget build(BuildContext context) {
@@ -125,8 +132,8 @@ class _PdfViewPageState extends State<PdfViewPage> {
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
        floatingActionButton: widget.fromUrl ? FloatingActionButton(
           onPressed: () async {
-            var dir = await DownloadsPathProvider.downloadsDirectory;
-            print("\n\n\nThe dir is" + dir.path);
+            print("on press fnc me");
+            downloadFile(widget.url);
           },
           backgroundColor: Colors.black,
           child: Icon(Icons.file_download,

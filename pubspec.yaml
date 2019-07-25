@@ -24,6 +24,8 @@ dependencies:
   path_provider:
   http:
   downloads_path_provider: ^0.1.0
+  dio: any
+  simple_permissions: ^0.1.9
 
 dev_dependencies:
   flutter_test:
